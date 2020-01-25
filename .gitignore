@@ -81,12 +81,16 @@ target/
 # exclude transformers repo 
 src/models/transformers/
 
+# exclude saved models
+models/saved_models/
+
 # Mac OS-specific storage files
 .DS_Store
 
 # vim
 *.swp
 *.swo
+
 
 # Mypy cache
 .mypy_cache/
