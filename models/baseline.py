@@ -19,7 +19,7 @@ print('after')
 
 # data = tensorflow_datasets.load('glue/mrpc', shuffle_files=True)
 print('checkpint on Pandas')
-data = pd.read_csv('/Users/ns5kn/Documents/insight/projects/factcc/data/interim/sample_train.csv')
+data = pd.read_csv('/data/interim/sample_train.csv')
 print('read the data')
 data = data[['idx', 'sentence1', 'sentence2', 'label']]
 print('read the data: DONE')
@@ -69,7 +69,7 @@ history = model.fit(train_dataset, epochs=8, steps_per_epoch=12,
 
 
 # Load the TensorFlow model in PyTorch for inspection
-model.save_pretrained('/Users/ns5kn/Documents/insight/projects/factcc/models/baseline/shuffle100batch64e8')
+model.save_pretrained('/models/saved_models/')
 
 
 # Load and test the saved model
