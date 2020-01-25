@@ -84,6 +84,9 @@ src/models/transformers/
 # exclude saved models
 models/saved_models/
 
+#exclude rsync shell script
+rsync-aws.sh
+
 # Mac OS-specific storage files
 .DS_Store
 

@@ -1,14 +1,20 @@
-import tensorflow as tf
-# import tensorflow_datasets
-from transformers import *
-import pandas as pd
-import numpy
-import torch 
-from transformers import BertForSequenceClassification
-
 import os
+import pathlib
+
+import numpy
+import pandas as pd
+import tensorflow as tf
+import torch 
+
+from transformers import *
+# from transformers import BertForSequenceClassification
+# import tensorflow_datasets
+
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
+PROJECT_DIR = pathlib.Path(__file__).resolve().parents[1]
+
+
 # from tokenizers import BertWordPieceTokenizer
 # import tokenizers
 
@@ -19,7 +25,8 @@ print('after')
 
 # data = tensorflow_datasets.load('glue/mrpc', shuffle_files=True)
 print('checkpint on Pandas')
-data = pd.read_csv('/data/interim/sample_train.csv')
+filepath = os.path.join(PROJECT_DIR, 'data/interim/sample_train.csv')
+data = pd.read_csv(filepath)
 print('read the data')
 data = data[['idx', 'sentence1', 'sentence2', 'label']]
 print('read the data: DONE')
@@ -69,7 +76,8 @@ history = model.fit(train_dataset, epochs=8, steps_per_epoch=12,
 
 
 # Load the TensorFlow model in PyTorch for inspection
-model.save_pretrained('/models/saved_models/')
+modelpath = os.path.join(PROJECT_DIR, 'models/saved_models/')
+model.save_pretrained(modelpath)
 
 
 # Load and test the saved model
