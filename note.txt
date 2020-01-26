@@ -1,0 +1,6 @@
+
+"""
+These packages is not installed when I re-created the conda env on ec2 env
+"""
+  - libgfortran=4.0.0
+  - appnope=0.1.0

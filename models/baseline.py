@@ -1,5 +1,6 @@
 import os
 import pathlib
+import pickle
 
 import numpy
 import pandas as pd
@@ -31,8 +32,8 @@ print('read the data')
 data = data[['idx', 'sentence1', 'sentence2', 'label']]
 print('read the data: DONE')
 
-train = data[:100000]
-validation = data[100000:]
+train = data[:10]
+validation = data[10:12]
 
 
 # # 'SUPPORTS' == 1, 'REFUTES' == 0
@@ -71,12 +72,15 @@ model.compile(optimizer=optimizer, loss=loss, metrics=[metric])
 print(model.summary())
 
 # Train and evaluate using tf.keras.Model.fit()
-history = model.fit(train_dataset, epochs=8, steps_per_epoch=12,
-                    validation_data=valid_dataset, validation_steps=2)
+history = model.fit(train_dataset, epochs=1, steps_per_epoch=1,
+                    validation_data=valid_dataset, validation_steps=1)
 
+respath = os.path.join(PROJECT_DIR, 'models/saved_models/test/history.pickle')
+with open(respath, 'wb') as f:
+        pickle.dump(history.history, f)
 
 # Load the TensorFlow model in PyTorch for inspection
-modelpath = os.path.join(PROJECT_DIR, 'models/saved_models/')
+modelpath = os.path.join(PROJECT_DIR, 'models/saved_models/test/')
 model.save_pretrained(modelpath)
 
 
