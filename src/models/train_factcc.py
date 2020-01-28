@@ -16,8 +16,6 @@ from transformers import *
 
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
-
 PROJECT_DIR = pathlib.Path(__file__).resolve().parents[1]
 current_time = datetime.datetime.now()
 
@@ -44,8 +42,6 @@ def read_jsonl(datafolder):
     with open(datafolder) as f:
         dataset = [json.loads(line) for line in f]
     df = pd.DataFrame(dataset)
-    df = df.rename(columns={'text': 'sentence1', 'claim': 'sentence2', 'id': 'idx'})
-    df = df[['idx', 'sentence1', 'sentence2', 'label']]
     return df
 
 def read_csv(csvfolder):
@@ -56,10 +52,8 @@ def read_csv(csvfolder):
 
 
 def train_test(data):
-    l = len(data)
-    to = int(0.8*(l))
-    train = data[:to]
-    validation = data[to:]
+    train = data[:10]
+    validation = data[10:12]
     train["label"] = train["label"].map({'SUPPORTS': numpy.int64(1) ,'REFUTES': numpy.int64(0)})
     validation["label"] = validation["label"].map({'SUPPORTS': numpy.int64(1) ,'REFUTES': numpy.int64(0)})
     return train, validation
@@ -86,16 +80,8 @@ def train_model(model, train_dataset, valid_dataset):
                     validation_data=valid_dataset, validation_steps=2)
 
     folder_name = str(current_time.day) + "-" + str(current_time.hour) + "-" + str(current_time.minute)
-    # print(folder_name)
-    respath = os.path.join(PROJECT_DIR, 'models/saved_models', folder_name)
-    # print(respath)
-
-    if not os.path.exists(respath):
-        os.makedirs(respath) 
-    
-    histpath = os.path.join(respath, 'history.pickle')
-    # print(histpath)
-    with open(histpath, 'wb') as f:
+    respath = os.path.join(PROJECT_DIR, 'models/saved_models', folder_name, 'history.pickle')
+    with open(respath, 'wb') as f:
             pickle.dump(history.history, f)
 
     # Load the TensorFlow model in PyTorch for inspection
@@ -116,15 +102,9 @@ def plot_graphs(history, string):
 datafolder = os.path.join(PROJECT_DIR, dataset_File )
 csvfolder  = os.path.join(PROJECT_DIR , csvfile)
 
-# data = read_csv(csvfolder)
-data = read_jsonl(datafolder)
-# print(len(data))
-# print(data.head(2))
-# exit()
+
+data = read_csv(csvfolder)
 train, validation = train_test(data)
-# print(len(train))
-# print(data.head(2))
-# exit()
 train_dataset = prepare_for_model(train)
 validation_dataset = prepare_for_model(validation)
 model = create_model()
