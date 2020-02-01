@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 import pickle
+import sys
 
 import numpy
 import pandas as pd
@@ -16,9 +17,15 @@ from transformers import *
 
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+# os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 PROJECT_DIR = pathlib.Path(__file__).resolve().parents[1]
+# /Users/ns5kn/Documents/insight/projects/factCC/src/models/bertviz/bertviz/head_view.py
+# bertvizpath = os.path.join(PROJECT_DIR, 'src/models/bertviz/' )
+# sys.path.insert(0, bertvizpath)
+
+# from bertviz import head_view
+
 current_time = datetime.datetime.now()
 
 cfgpath = os.path.join(PROJECT_DIR, './configuration.cfg' )
@@ -54,14 +61,13 @@ def read_csv(csvfolder):
     return data
     
 
-
 def train_test(data):
     l = len(data)
     to = int(0.8*(l))
     train = data[:to]
     validation = data[to:]
-    train["label"] = train["label"].map({'SUPPORTS': numpy.int64(1) ,'REFUTES': numpy.int64(0)})
-    validation["label"] = validation["label"].map({'SUPPORTS': numpy.int64(1) ,'REFUTES': numpy.int64(0)})
+    train["label"] = train["label"].map({'CORRECT': numpy.int64(1) ,'INCORRECT': numpy.int64(0)})
+    validation["label"] = validation["label"].map({'CORRECT': numpy.int64(1) ,'INCORRECT': numpy.int64(0)})
     return train, validation
 
 def prepare_for_model(dataset):
@@ -70,8 +76,15 @@ def prepare_for_model(dataset):
     model_dataset = glue_convert_examples_to_features(tfdata, tokenizer, label_list=[numpy.int64(1), numpy.int64(0)], max_length=maxlen , task='mrpc', output_mode="classification")
     return model_dataset
 
+
 def create_model():
     model = TFBertForSequenceClassification.from_pretrained(classification_mode, force_download=True)
+
+    # for param in model.bert.parameters():
+    #     param.requires_grad = False
+
+    # for w in model.bert.weights():
+    #     w._trainable= False
     optimizer = tf.keras.optimizers.Adam(learning_rate=2e-5, epsilon=1e-08, clipnorm=1.0)
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
@@ -80,8 +93,8 @@ def create_model():
 
 
 def train_model(model, train_dataset, valid_dataset):
-    train_dataset = train_dataset.shuffle(100).batch(64).repeat(2)
-    valid_dataset = valid_dataset.batch(64)
+    train_dataset = train_dataset.shuffle(100).batch(batchsize).repeat(2)
+    valid_dataset = valid_dataset.batch(batchsize)
     history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=steps,
                     validation_data=valid_dataset, validation_steps=2)
 
@@ -102,6 +115,39 @@ def train_model(model, train_dataset, valid_dataset):
     # modelpath = os.path.join(PROJECT_DIR, 'models/saved_models/test/')
     model.save_pretrained(respath)
 
+    return respath
+
+
+def test_data(modelpath, sent1, sent2):
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_mode)
+    pytorch_model = BertForSequenceClassification.from_pretrained(modelpath, from_tf=True)
+
+    inputs_1 = tokenizer.encode_plus(sent1, sent2, add_special_tokens=True, return_tensors='pt')
+    pred_1 = pytorch_model(inputs_1['input_ids'], token_type_ids=inputs_1['token_type_ids'])[0].argmax().item()
+    # pred_2 = pytorch_model(inputs_2['input_ids'], token_type_ids=inputs_2['token_type_ids'])[0].argmax().item()
+
+    print("sentence_1 is", "a paraphrase" if pred_1 else "not a paraphrase", "of sentence_0")
+
+    return pytorch_model, pred_1
+
+def show_head_view(model, sentence_a, sentence_b=None):
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_mode)
+
+    inputs = tokenizer.encode_plus(sentence_a, sentence_b, return_tensors='pt', add_special_tokens=True)
+    token_type_ids = inputs['token_type_ids']
+    input_ids = inputs['input_ids']
+    # (tensor([[-0.1247,  0.1027]], grad_fn=<AddmmBackward>),)
+    attention = model(input_ids, token_type_ids=token_type_ids)[0]
+    attention = model(input_ids, token_type_ids=token_type_ids)[-1]
+    print(attention)
+    # exit()
+    input_id_list = input_ids[0].tolist() # Batch index 0
+    tokens = tokenizer.convert_ids_to_tokens(input_id_list)
+    if sentence_b:
+        sentence_b_start = token_type_ids[0].tolist().index(1)
+    else:
+        sentence_b_start = None
+    head_view(attention, tokens, sentence_b_start)
 
 def plot_graphs(history, string):
     plt.plot(history.history[string])
@@ -113,70 +159,80 @@ def plot_graphs(history, string):
 
 
 
-datafolder = os.path.join(PROJECT_DIR, dataset_File )
-csvfolder  = os.path.join(PROJECT_DIR , csvfile)
+
 
 # data = read_csv(csvfolder)
-data = read_jsonl(datafolder)
-# print(len(data))
-# print(data.head(2))
-# exit()
-train, validation = train_test(data)
-# print(len(train))
-# print(data.head(2))
-# exit()
-train_dataset = prepare_for_model(train)
-validation_dataset = prepare_for_model(validation)
-model = create_model()
-print(model.summary())
-train_model(model, train_dataset, validation_dataset )
+# print("0- reading Jsonl data - ")
 
+# data = read_jsonl(datafolder)
+# print("1- Jsonl data - done")
+# # print(data.head(2))
+# # exit()
+# train, validation = train_test(data)
+# # print(len(train))
+# # print(data.head(2))
+# # exit()
+# train = train[:10]
+# validation = validation[10:12]
+# train_dataset = prepare_for_model(train)
+# print("2- Train to tf.Dataset and tokenization Done - ")
 
+# validation_dataset = prepare_for_model(validation)
+# print("3- Validation to tf.Dataset and tokenization Done - ")
 
+# model = create_model()
+# print(model.summary())
+# print("4- Now Training the mode ")
 
-# import datetime  
+# path = train_model(model, train_dataset, validation_dataset )
+# print("5- Training Done ")
+
+# print(path)
+
+if __name__ == "__main__":
+    # datafolder = os.path.join(PROJECT_DIR, dataset_File )
+    csvfolder  = os.path.join(PROJECT_DIR , csvfile)
+    print("0- reading Jsonl data - ")
     
-# # using now() to get current time  
-# current_time = datetime.datetime.now()  
-    
-# # Printing attributes of now().  
-# print ("The attributes of now() are : ")  
-    
-# print ("Year : ", end = "")  
-# print (current_time.year)  
-    
-# print ("Month : ", end = "")  
-# print (current_time.month)  
-    
-# print ("Day : ", end = "")  
-# print (current_time.day)  
-    
-# print ("Hour : ", end = "")  
-# print (current_time.hour)  
-    
-# print ("Minute : ", end = "")  
-# print (current_time.minute)  
-    
-# print ("Second : ", end = "")  
-# print (current_time.second)  
-    
-# print ("Microsecond : ", end = "")  
-# print (current_time.microsecond)  
+    data = read_csv(csvfolder)
 
+    # data = read_jsonl(datafolder)
+    print("1- Jsonl data - done")
+    # # print(data.head(2))
+    # # exit()
+    train, validation = train_test(data)
+    print(len(train))
+    # # print(data.head(2))
+    # # exit()
+    # train = train[:10]
+    # validation = validation[10:12]
+    train_dataset = prepare_for_model(train)
+    print("2- Train to tf.Dataset and tokenization Done - ")
 
-# print('after')
+    validation_dataset = prepare_for_model(validation)
+    print("3- Validation to tf.Dataset and tokenization Done - ")
 
-# data = tensorflow_datasets.load('glue/mrpc', shuffle_files=True)
-# print('checkpint on Pandas')
-# # filepath = os.path.join(PROJECT_DIR, 'data/interim/sample_train.csv')
+    model = create_model()
+    print(model.summary())
+    print("4- Now Training the mode ")
 
-# print('read the data: DONE')
+    path = train_model(model, train_dataset, validation_dataset )
+    print("5- Training Done ")
+    print(path)
 
 
 
 
-# # 'SUPPORTS' == 1, 'REFUTES' == 0
 
+    # modelpath = '/Users/ns5kn/Documents/insight/projects/factcc/models/saved_models/29-csvfile_5batch_7epoch/'
+    # sentence_0 = "This research was consistent with his findings."
+    # sentence_1 = "His findings were compatible with this research."
+    # sentence_0 = "(CNN) Georgia Southern University was in mourning Thursday after five nursing students were killed the day before in a multivehicle wreck near Savannah. Caitlyn Baggett, Morgan Bass, Emily Clark, Abbie Deloach and Catherine (McKay) Pittman -- all juniors -- were killed in the  Wednesday morning crash as they were traveling to a hospital in Savannah, according to the school website. "
+    # sentence_1 = "georgia southern university was in mourning after five nursing students died."
+    # model, pred = test_data(modelpath, sentence_0, sentence_1)
+    # print(model)
+    # print(pred)
+    # show_head_view(model, sentence_0, sentence_1)
 
 
 # # print(train.head(2))
