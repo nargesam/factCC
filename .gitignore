@@ -85,7 +85,7 @@ src/models/transformers/
 models/saved_models/
 
 # exclude bertviz
-src/models/bertviz
+src/bertviz
 
 #exclude rsync shell script
 rsync-aws.sh

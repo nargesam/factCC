@@ -9,17 +9,17 @@ import sys
 import numpy
 import pandas as pd
 import tensorflow as tf
+
 import torch 
 
 from transformers import *
-# from transformers import BertForSequenceClassification
-# import tensorflow_datasets
 
-
+# Must add this environment variable or everything explodes
+# HT: https://github.com/dmlc/xgboost/issues/1715
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 # os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-PROJECT_DIR = pathlib.Path(__file__).resolve().parents[1]
+PROJECT_DIR = pathlib.Path(__file__).resolve().parents[3]
 # /Users/ns5kn/Documents/insight/projects/factCC/src/models/bertviz/bertviz/head_view.py
 # bertvizpath = os.path.join(PROJECT_DIR, 'src/models/bertviz/' )
 # sys.path.insert(0, bertvizpath)
@@ -57,6 +57,7 @@ def read_jsonl(datafolder):
 
 def read_csv(csvfolder):
     data = pd.read_csv(csvfolder)
+    data =  data.rename(columns={'id': 'idx', 'text': 'sentence1', 'claim': 'sentence2'})
     data = data[['idx', 'sentence1', 'sentence2', 'label']]
     return data
     
@@ -66,15 +67,32 @@ def train_test(data):
     to = int(0.8*(l))
     train = data[:to]
     validation = data[to:]
-    train["label"] = train["label"].map({'CORRECT': numpy.int64(1) ,'INCORRECT': numpy.int64(0)})
-    validation["label"] = validation["label"].map({'CORRECT': numpy.int64(1) ,'INCORRECT': numpy.int64(0)})
+    train["label"] = train["label"].map(
+                    {
+                        'CORRECT': numpy.int64(1),
+                        'INCORRECT': numpy.int64(0),
+                        'SUPPORTS': numpy.int64(1),
+                        'REFUTES': numpy.int64(0)
+                    },
+                )
+    validation["label"] = validation["label"].map(
+        {
+            'CORRECT': numpy.int64(1),
+            'INCORRECT': numpy.int64(0),
+            'SUPPORTS': numpy.int64(1),
+            'REFUTES': numpy.int64(0)
+        },
+    )
+
+    print(train.head(1))
+    print(train['label'].value_counts())
     return train, validation
 
-# def prepare_for_model(dataset):
-#     tokenizer = BertTokenizer.from_pretrained(tokenizer_mode)
-#     tfdata = tf.data.Dataset.from_tensor_slices(dict(dataset))
-#     model_dataset = glue_convert_examples_to_features(tfdata, tokenizer, label_list=[numpy.int64(1), numpy.int64(0)], max_length=maxlen , task='mrpc', output_mode="classification")
-#     return model_dataset
+def prepare_for_model(dataset):
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_mode)
+    tfdata = tf.data.Dataset.from_tensor_slices(dict(dataset))
+    model_dataset = glue_convert_examples_to_features(tfdata, tokenizer, label_list=[numpy.int64(1), numpy.int64(0)], max_length=maxlen , task='mrpc', output_mode="classification")
+    return model_dataset
 
 
 def create_model():
@@ -94,14 +112,21 @@ def create_model():
 
 def train_model(model, train_dataset, valid_dataset):
     train_dataset = train_dataset.shuffle(100).batch(batchsize).repeat(2)
-    valid_dataset = valid_dataset.batch(batchsize)
-    history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=steps,
-                    validation_data=valid_dataset, validation_steps=2)
+    valid_dataset = valid_dataset.batch(batchsize).repeat()
 
+    # creating callback
     folder_name = str(current_time.day) + "-" + str(current_time.hour) + "-" + str(current_time.minute)
     # print(folder_name)
     respath = os.path.join(PROJECT_DIR, 'models/saved_models', folder_name)
-    # print(respath)
+    print(respath)
+    # best_path = respath + 'crf.hdf5'
+    # model_checkpoint = tf.keras.callbacks.ModelCheckpoint(best_path, monitor='val_acc', verbose=1,
+    #                      save_best_only=True, mode='max', period=1)
+    # callbacks=[model_checkpoint]
+    history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=steps,
+                    validation_data=valid_dataset, validation_steps=2)
+
+    
 
     if not os.path.exists(respath):
         os.makedirs(respath) 
@@ -210,7 +235,7 @@ if __name__ == "__main__":
     # print("2- Train to tf.Dataset and tokenization Done - ")
 
     # print(type(train_dataset))
-    # exit()
+    # # exit()
     # validation_dataset = prepare_for_model(validation)
     # print("3- Validation to tf.Dataset and tokenization Done - ")
 
@@ -221,6 +246,10 @@ if __name__ == "__main__":
     # path = train_model(model, train_dataset, validation_dataset )
     # print("5- Training Done ")
     # print(path)
+    
+
+
+
 
 
     modelpath = '/Users/ns5kn/Documents/insight/projects/factcc/models/saved_models/29-csvfile_5batch_7epoch/'
