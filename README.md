@@ -1,4 +1,4 @@
-# fAutoFact:  Automated tool for evaluating the factual consistency of summarized text
+# AutoFact:  Automated tool for evaluating the factual consistency of summarized text
 
 Project for the AI Fellowship at Insight
 
@@ -17,7 +17,7 @@ Demo: Served via an interactive command line interface created with the Python p
 
 ===================================================
 
-<img src="https://github.com/nargesam/factCC/blob/master/images/model.jpg" width="200" height="200">
+<img src="https://github.com/nargesam/factCC/blob/master/images/model.jpg" width="300" height="300">
 
 =====================================================
 ## Data description
