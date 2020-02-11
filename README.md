@@ -16,8 +16,8 @@ Development: used HuggingFace to built the AutoFact model using various Transfor
 Demo: Served via an interactive command line interface created with the Python package Click.
 
 ===================================================
-![MODEL](images/model.jpg)
 
+<img src="https://github.com/nargesam/factCC/blob/master/images/model.jpg" width="200" height="200">
 
 =====================================================
 ## Data description
