@@ -12,7 +12,7 @@ def load_dataset(data_file=None):
 
     with open(data_file, 'r') as f:
         dataset = [json.loads(line) for line in f]
-        
+    # df = pd.read_csv(data_file) 
     df = pd.DataFrame(dataset)
     df['augmentation'] = df['augmentation'].fillna('None')
 

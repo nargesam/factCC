@@ -263,7 +263,7 @@ class FactCCBase(ABC):
         return os.path.isfile(self.model_output_path) and os.path.isfile(self.history_output_path)
     
 
-    def test_data_exists(self):
+    def test_pred_exists(self):
         return os.path.isfile(self.test_data_output_path) 
 
 
@@ -307,6 +307,7 @@ class FactCCBertBaseCased(FactCCBase):
         
         self._tokenizer = None
         self._transformer = None
+        # self._model_type = "bert-base-cased"
 
     @property
     def model_type(self):
@@ -321,6 +322,9 @@ class FactCCBertBaseCased(FactCCBase):
         tokenizer = BertTokenizer.from_pretrained(self.model_type)
         return tokenizer
 
+    def load_tokenizer(self):
+        self._tokenizer =  self._get_tokenizer()
+
     @property
     def transformer(self):
         return self._transformer
@@ -332,8 +336,7 @@ class FactCCBertBaseCased(FactCCBase):
     def load_transformer(self):
         self._transformer = self._get_transformer()
 
-    def load_tokenizer(self):
-        self._tokenizer =  self._get_tokenizer()
+    
 
 
 
@@ -372,6 +375,128 @@ class FactCCBertBaseUncased(FactCCBase):
         self._tokenizer =  self._get_tokenizer()
 
 
+class FactCCBertBaseFineTuned(FactCCBase):
+    def __init__(self, config_path):
+        super().__init__(config_path)
+        
+        self._tokenizer = None
+        self._transformer = None
+
+    @property
+    def model_type(self):
+        # return self._model_type
+        return "bert-base-cased"
+
+    @property
+    def tokenizer(self):
+        return self._tokenizer
+    
+    def _get_tokenizer(self):
+        tokenizer = BertTokenizer.from_pretrained(self.model_type)
+        return tokenizer
+
+    @property
+    def transformer(self):
+        return self._transformer
+    
+    
+    def _get_transformer(self):
+        model = TFBertForSequenceClassification.from_pretrained(self.model_type, force_download=True)
+        return model
+    
+    def train_model(self):
+        self._model = self.transformer
+        for w in self._model.bert.weights:
+            w._trainable= False
+        optimizer = tf.keras.optimizers.Adam(learning_rate=2e-5, epsilon=1e-08, clipnorm=1.0)
+        loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
+        self._model.compile(optimizer=optimizer, loss=loss, metrics=[metric])
+
+    def load_transformer(self):
+        self._transformer = self._get_transformer()
+
+    def load_tokenizer(self):
+        self._tokenizer =  self._get_tokenizer()
+
+
+
+class FactCCRoBERTa(FactCCBase):
+    def __init__(self, config_path):
+        super().__init__(config_path)
+        
+        self._tokenizer = None
+        self._transformer = None
+
+    @property
+    def model_type(self):
+        # return self._model_type
+        return 'roberta-base'
+
+    @property
+    def tokenizer(self):
+        return self._tokenizer
+    
+    def _get_tokenizer(self):
+        tokenizer = RobertaTokenizer.from_pretrained(self.model_type)
+        return tokenizer
+
+    @property
+    def transformer(self):
+        return self._transformer
+    
+    
+    def _get_transformer(self):
+        model = TFRobertaForSequenceClassification.from_pretrained(self.model_type, force_download=True)
+        return model
+    
+    def load_model_from_file(self):
+        self._model = RobertaForSequenceClassification.from_pretrained(self.output_dir, from_tf=True)
+
+    def load_transformer(self):
+        self._transformer = self._get_transformer()
+
+    def load_tokenizer(self):
+        self._tokenizer =  self._get_tokenizer()
+
+
+
+class FactCCDistilBert(FactCCBase):
+    def __init__(self, config_path):
+        super().__init__(config_path)
+        
+        self._tokenizer = None
+        self._transformer = None
+
+    @property
+    def model_type(self):
+        # return self._model_type
+        return 'distilbert-base-uncased'
+
+    @property
+    def tokenizer(self):
+        return self._tokenizer
+    
+    def _get_tokenizer(self):
+        tokenizer = DistilBertTokenizer.from_pretrained(self.model_type)
+        return tokenizer
+
+    @property
+    def transformer(self):
+        return self._transformer
+    
+    def load_model_from_file(self):
+        self._model = DistilBertForSequenceClassification.from_pretrained(self.output_dir, from_tf=True)
+
+    def _get_transformer(self):
+        model = TFDistilBertForSequenceClassification.from_pretrained(self.model_type, force_download=True)
+        return model
+
+    def load_transformer(self):
+        self._transformer = self._get_transformer()
+
+    def load_tokenizer(self):
+        self._tokenizer =  self._get_tokenizer()
 
 
 

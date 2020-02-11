@@ -118,7 +118,7 @@ def train_model(model, train_dataset, valid_dataset):
     folder_name = str(current_time.day) + "-" + str(current_time.hour) + "-" + str(current_time.minute)
     # print(folder_name)
     respath = os.path.join(PROJECT_DIR, 'models/saved_models', folder_name)
-    print(respath)
+    # print(respath)
     # best_path = respath + 'crf.hdf5'
     # model_checkpoint = tf.keras.callbacks.ModelCheckpoint(best_path, monitor='val_acc', verbose=1,
     #                      save_best_only=True, mode='max', period=1)

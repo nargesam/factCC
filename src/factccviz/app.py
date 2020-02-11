@@ -22,10 +22,17 @@ selected_instance = st.sidebar.selectbox(
      list(range(30))
 )
 
+
+
 st.header("Dataset")
 st.write(dataset)
 
-st.header("Source")
+st.header("Claim")
+claim_1 = st.empty()
+claim_2 = st.empty()
+claim_3 = st.empty()
+
+# st.header("Source")
 src_full = dataset.iloc[selected_instance, -1]
 src_full_tokenized = tokenizer.tokenize(src_full)
 
@@ -35,9 +42,11 @@ i, j = extraction_span
 src_full_tokenized[i] = "```" + src_full_tokenized[i]
 src_full_tokenized[j] = "```" + src_full_tokenized[j]
 
-st.markdown(" ".join(src_full_tokenized))
+checkbox = st.sidebar.checkbox('See source')
+if checkbox:
+    st.markdown(" ".join(src_full_tokenized))
 
-st.header("Claim")
+
 
 claim = dataset.iloc[selected_instance, 4]
 claim_tokenized = tokenizer.tokenize(claim)
@@ -49,8 +58,8 @@ claim_tokenized[i] = "```" + claim_tokenized[i]
 claim_tokenized[j+1] = "```" + claim_tokenized[j+1]
 
 augmentation_type = str(dataset.iloc[selected_instance, 5])
-st.write(f"**Augmentation type**: {augmentation_type}")
-st.write(f"**Augmentation span**: ({i}, {j})")
+claim_1.markdown(f"**Augmentation type**: {augmentation_type}")
+claim_2.markdown(f"**Augmentation span**: ({i}, {j})")
 
 claim = " ".join(claim_tokenized)
-st.markdown(f"**Augmentation**: {claim}")
+claim_3.markdown(f"**Augmentation**: {claim}")

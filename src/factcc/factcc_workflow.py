@@ -11,7 +11,7 @@ from prefect import task, Task, Flow, Parameter
 from prefect.engine.signals import SKIP
 
 from model import FactCCBertBaseCased, FactCCBertBaseUncased
-
+from visualization import FactCCViz
 
 # PROJECT_DIR = pathlib.Path(__file__).resolve().parents[2]
 # cfgpath = os.path.join(PROJECT_DIR, './configuration.cfg' )
@@ -19,8 +19,8 @@ from model import FactCCBertBaseCased, FactCCBertBaseUncased
 
 
 @task
-def test_data_existance_check(obj):
-    if obj.test_data_exists():
+def test_pred_existance_check(obj):
+    if obj.test_pred_exists():
         raise SKIP("Test data has already been created.")
 
 
@@ -102,13 +102,13 @@ def run(workflow_name, config_path, model_type):
 
     with Flow(workflow_name)  as f:
         # Train Workflow
-        task_test_data_existence_check = test_data_existance_check(obj=obj)
+        task_test_pred_existence_check = test_pred_existance_check(obj=obj)
 
-        task_model_existence_check = model_existence_check(obj=obj, upstream_tasks=[task_test_data_existence_check])
+        task_model_existence_check = model_existence_check(obj=obj) #, upstream_tasks=[task_test_pred_existence_check])
 
         task_load_data = load_data(obj=obj, upstream_tasks=[task_model_existence_check])
 
-        task_load_tokenizer = load_tokenizer(obj=obj, upstream_tasks=[task_test_data_existence_check])
+        task_load_tokenizer = load_tokenizer(obj=obj, upstream_tasks=[task_model_existence_check]) #, upstream_tasks=[task_test_pred_existence_check])
         task_load_transformer = load_transformer(obj=obj, upstream_tasks=[task_model_existence_check])
 
         task_split_train_validation = split_train_test(obj=obj, upstream_tasks=[task_load_data])
@@ -125,8 +125,8 @@ def run(workflow_name, config_path, model_type):
         task_save_model = save_model(obj=obj, upstream_tasks=[task_train_model])
 
         # Test workflow: load model from file
-        task_load_model_from_file = load_model_from_file(obj=obj, upstream_tasks=[task_test_data_existence_check])
-        task_load_test_data = load_test_data(obj=obj, upstream_tasks=[task_test_data_existence_check])
+        task_load_model_from_file = load_model_from_file(obj=obj) #, upstream_tasks=[task_save_model] )#, upstream_tasks=[task_test_pred_existence_check])
+        task_load_test_data = load_test_data(obj=obj) #, upstream_tasks=[task_save_model])
 
         task_run_test = run_test(obj=obj, upstream_tasks=[task_load_model_from_file, task_load_test_data])
 

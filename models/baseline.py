@@ -26,24 +26,24 @@ PROJECT_DIR = pathlib.Path(__file__).resolve().parents[1]
 
 # from bertviz import head_view
 
-# current_time = datetime.datetime.now()
+current_time = datetime.datetime.now()
 
-# cfgpath = os.path.join(PROJECT_DIR, './configuration.cfg' )
-# config = configparser.RawConfigParser()
-# try:
-#     config.read(cfgpath)
-# except:
-#     print("Couldn't read config file from ./configuration.cfg")
-#     exit()
+cfgpath = os.path.join(PROJECT_DIR, './configuration.cfg' )
+config = configparser.RawConfigParser()
+try:
+    config.read(cfgpath)
+except:
+    print("Couldn't read config file from ./configuration.cfg")
+    exit()
 
-# tokenizer_mode = config.get('Params', 'tokenizer_mode')
-# dataset_File = config.get('Params', 'dataset')
-# csvfile = config.get('Params', 'csvfile')
-# classification_mode = config.get('Params', 'classification_mode')
-# maxlen = int(config.get('Params', 'maxlen'))
-# batchsize = int(config.get('Params', 'batchsize'))
-# steps = int(config.get('Params', 'steps'))
-# num_epochs = int(config.get('Params', 'num_epochs'))
+tokenizer_mode = config.get('Params', 'tokenizer_mode')
+dataset_File = config.get('Params', 'dataset')
+csvfile = config.get('Params', 'csvfile')
+classification_mode = config.get('Params', 'classification_mode')
+maxlen = int(config.get('Params', 'maxlen'))
+batchsize = int(config.get('Params', 'batchsize'))
+steps = int(config.get('Params', 'steps'))
+num_epochs = int(config.get('Params', 'num_epochs'))
 
 
 
@@ -66,15 +66,15 @@ def train_test(data):
     to = int(0.8*(l))
     train = data[:to]
     validation = data[to:]
-    train["label"] = train["label"].map({'CORRECT': numpy.int64(1) ,'INCORRECT': numpy.int64(0)})
-    validation["label"] = validation["label"].map({'CORRECT': numpy.int64(1) ,'INCORRECT': numpy.int64(0)})
+    train["label"] = train["label"].map({'SUPPORTS': numpy.int64(1) ,'REFUTES': numpy.int64(0)})
+    validation["label"] = validation["label"].map({'SUPPORTS': numpy.int64(1) ,'REFUTES': numpy.int64(0)})
     return train, validation
 
-# def prepare_for_model(dataset):
-#     tokenizer = BertTokenizer.from_pretrained(tokenizer_mode)
-#     tfdata = tf.data.Dataset.from_tensor_slices(dict(dataset))
-#     model_dataset = glue_convert_examples_to_features(tfdata, tokenizer, label_list=[numpy.int64(1), numpy.int64(0)], max_length=maxlen , task='mrpc', output_mode="classification")
-#     return model_dataset
+def prepare_for_model(dataset):
+    tokenizer = BertTokenizer.from_pretrained(tokenizer_mode)
+    tfdata = tf.data.Dataset.from_tensor_slices(dict(dataset))
+    model_dataset = glue_convert_examples_to_features(tfdata, tokenizer, label_list=[numpy.int64(1), numpy.int64(0)], max_length=maxlen , task='mrpc', output_mode="classification")
+    return model_dataset
 
 
 def create_model():
@@ -95,8 +95,12 @@ def create_model():
 def train_model(model, train_dataset, valid_dataset):
     train_dataset = train_dataset.shuffle(100).batch(batchsize).repeat(2)
     valid_dataset = valid_dataset.batch(batchsize)
+    model_checkpoint = tf.keras.callbacks.ModelCheckpoint(self.model_output_path, monitor='val_accuracy', verbose=1,
+                         save_best_only=True, mode='max') #, save_freq='epoch')
+    
+    callback=[model_checkpoint]
     history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=steps,
-                    validation_data=valid_dataset, validation_steps=2)
+                    validation_data=valid_dataset, callbacks=callback,validation_steps=2)
 
     folder_name = str(current_time.day) + "-" + str(current_time.hour) + "-" + str(current_time.minute)
     # print(folder_name)
@@ -139,7 +143,7 @@ def show_head_view(model, sentence_a, sentence_b=None):
     # (tensor([[-0.1247,  0.1027]], grad_fn=<AddmmBackward>),)
     attention = model(input_ids, token_type_ids=token_type_ids)[0]
     attention = model(input_ids, token_type_ids=token_type_ids)[-1]
-    print(attention)
+    # print(attention)
     # exit()
     input_id_list = input_ids[0].tolist() # Batch index 0
     tokens = tokenizer.convert_ids_to_tokens(input_id_list)
@@ -191,46 +195,46 @@ def plot_graphs(history, string):
 
 if __name__ == "__main__":
     # datafolder = os.path.join(PROJECT_DIR, dataset_File )
-    # csvfolder  = os.path.join(PROJECT_DIR , csvfile)
-    # print("0- reading Jsonl data - ")
+    csvfolder  = os.path.join(PROJECT_DIR , csvfile)
+    print("0- reading Jsonl data - ")
     
-    # data = read_csv(csvfolder)
+    data = read_csv(csvfolder)
 
     # # data = read_jsonl(datafolder)
-    # print("1- Jsonl data - done")
+    print("1- Jsonl data - done")
     # # # print(data.head(2))
     # # # exit()
-    # train, validation = train_test(data)
-    # print(len(train))
+    train, validation = train_test(data)
+    print(len(train))
     # # # print(data.head(2))
     # # # exit()
     # train = train[:10]
     # validation = validation[10:12]
-    # train_dataset = prepare_for_model(train)
-    # print("2- Train to tf.Dataset and tokenization Done - ")
+    train_dataset = prepare_for_model(train)
+    print("2- Train to tf.Dataset and tokenization Done - ")
 
     # print(type(train_dataset))
     # exit()
-    # validation_dataset = prepare_for_model(validation)
-    # print("3- Validation to tf.Dataset and tokenization Done - ")
+    validation_dataset = prepare_for_model(validation)
+    print("3- Validation to tf.Dataset and tokenization Done - ")
 
-    # model = create_model()
-    # print(model.summary())
-    # print("4- Now Training the mode ")
+    model = create_model()
+    print(model.summary())
+    print("4- Now Training the mode ")
 
-    # path = train_model(model, train_dataset, validation_dataset )
-    # print("5- Training Done ")
-    # print(path)
+    path = train_model(model, train_dataset, validation_dataset )
+    print("5- Training Done ")
+    print(path)
 
 
-    modelpath = '/Users/ns5kn/Documents/insight/projects/factcc/models/saved_models/29-csvfile_5batch_7epoch/'
-    sentence_0 = "This research was consistent with his findings."
-    sentence_1 = "His findings were compatible with this research."
-    sentence_0 = "(CNN) Georgia Southern University was in mourning Thursday after five nursing students were killed the day before in a multivehicle wreck near Savannah. Caitlyn Baggett, Morgan Bass, Emily Clark, Abbie Deloach and Catherine (McKay) Pittman -- all juniors -- were killed in the  Wednesday morning crash as they were traveling to a hospital in Savannah, according to the school website. "
-    sentence_1 = "georgia southern university was in mourning after five nursing students died."
-    model, pred = test_data(modelpath, sentence_0, sentence_1)
-    # print(model)
-    print(pred)
+    # modelpath = '/Users/ns5kn/Documents/insight/projects/factcc/models/saved_models/29-csvfile_5batch_7epoch/'
+    # sentence_0 = "This research was consistent with his findings."
+    # sentence_1 = "His findings were compatible with this research."
+    # sentence_0 = "(CNN) Georgia Southern University was in mourning Thursday after five nursing students were killed the day before in a multivehicle wreck near Savannah. Caitlyn Baggett, Morgan Bass, Emily Clark, Abbie Deloach and Catherine (McKay) Pittman -- all juniors -- were killed in the  Wednesday morning crash as they were traveling to a hospital in Savannah, according to the school website. "
+    # sentence_1 = "georgia southern university was in mourning after five nursing students died."
+    # model, pred = test_data(modelpath, sentence_0, sentence_1)
+    # # print(model)
+    # print(pred)
     # show_head_view(model, sentence_0, sentence_1)
 
 
