@@ -186,9 +186,6 @@ class FactCCBase(ABC):
         self._train_features = self._train_features.shuffle(100).batch(self._batch_size).repeat(2)
         self._validation_features = self._validation_features.batch(self._batch_size)
         
-        # cp_callback = tf.keras.callbacks.ModelCheckpoint((filepath=checkpoint_path,
-        #                                          save_weights_only=True,
-        #                                          verbose=1)
         model_checkpoint = tf.keras.callbacks.ModelCheckpoint(self.model_output_path, monitor='val_accuracy', verbose=1,
                          save_best_only=True, mode='max') #, save_freq='epoch')
         callbacks=[model_checkpoint]
@@ -198,8 +195,6 @@ class FactCCBase(ABC):
 
     def _create_output_directory(self):
         current_time = datetime.datetime.now()
-        # folder_name = str(self.) + "-" + str(current_time.hour) + "-" + str(current_time.minute)
-        # model_type_dir = f"{self._model_type}"
         res_name = f"batch_size-{self._batch_size}__epoch-{self._num_epochs}__datasize-{self._datasize}"
         self._output_dir = os.path.join(self._save_model_dir, self.model_type, res_name)
         
