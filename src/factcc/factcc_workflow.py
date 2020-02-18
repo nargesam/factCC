@@ -23,7 +23,6 @@ def test_pred_existance_check(obj):
     if obj.test_pred_exists():
         raise SKIP("Test data has already been created.")
 
-
 @task
 def model_existence_check(obj):
     if obj.model_exists():

@@ -64,6 +64,7 @@ class FactCCBase(ABC):
         self._batch_size = int(config.get('Params', 'batchsize'))
         self._steps = int(config.get('Params', 'steps'))
         self._num_epochs = int(config.get('Params', 'num_epochs'))
+
     
     def load_data(self, clobber=False):
         """ if Clobber= False, use the cached value if it exists, otherwise, always read the data
@@ -219,6 +220,7 @@ class FactCCBase(ABC):
         self._model = BertForSequenceClassification.from_pretrained(self.output_dir, from_tf=True)
 
     def load_test_data(self):
+        
         self._test_data = pd.read_csv(self._test_csv_path)
         self._test_data =  self._test_data.rename(columns={'id': 'idx', 'text': 'sentence1', 'claim': 'sentence2'})
         # self._test_data = self._test_data[['idx', 'sentence1', 'sentence2', 'label']]
@@ -252,6 +254,25 @@ class FactCCBase(ABC):
         df_pred = pd.DataFrame(data_dict)
         self._test_with_predictions = pd.merge(self._test_data, df_pred, on='idx', how='inner')
     
+    def run_test_cases(self, sentence1, sentence2):
+        
+        encoded_input = self.tokenizer.encode_plus(
+            sentence1, 
+            sentence2, 
+            max_length=self._token_maxlen,
+            add_special_tokens=True
+            , 
+            return_tensors='pt'
+        )
+        # print(encoded_input)
+        pred = self._model(
+            encoded_input['input_ids'], 
+            token_type_ids=encoded_input['token_type_ids']
+        )[0].argmax().item()
+        
+        return pred
+
+
     def save_test(self, save_path=None):
         if save_path is None:
             save_path = self.test_data_output_path
@@ -300,6 +321,8 @@ class FactCCBase(ABC):
     def model(self):
         return self._model
     
+
+
 
 class FactCCBertBaseCased(FactCCBase):
     def __init__(self, config_path):

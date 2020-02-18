@@ -28,7 +28,27 @@ The data is provided from Salesforce research, and you can re-create the dataset
 
 ====================================================
 
+## Test AutoFact
 
+To try AutoFact, after you cloned the repo: 
+
+```python
+git clone https://github.com/nargesam/factCC.git
+```
+
+You can recreate the conda environment:
+
+```python
+conda env create -f environment.yml 
+```
+
+Or, install the requirement.txt file:
+
+```python
+pip3 install -r requirements.txt
+```
+
+Please download the Bert  or Roberta model and save it to their directories: 
 
 To be updated: 
 

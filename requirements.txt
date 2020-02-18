@@ -10,3 +10,8 @@ diskcache
 numpy
 pandas
 python>=3.6
+colorama
+prefect
+matplotlib
+plotly
+seaborn
