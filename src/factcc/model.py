@@ -403,7 +403,7 @@ class FactCCBertBaseFineTuned(FactCCBase):
     @property
     def model_type(self):
         # return self._model_type
-        return "bert-base-cased"
+        return 'bert-base-cased'
 
     @property
     def tokenizer(self):

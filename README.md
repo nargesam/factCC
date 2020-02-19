@@ -50,12 +50,14 @@ Or, install the requirement.txt file:
 pip3 install -r requirements.txt
 ```
 
-Please download the [BERT Base Cased](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/4-18-7-10perc-bert-cased-6epoch-8step-50batch-73acc/tf_model.h5) [BERT Base Uncased](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/04-22-07-Bert-Base-UnCased-10perc-6epoch-8step-50batch-72acc/tf_model.h5) or [RoBERTa](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/5-18-37-Roberta-10perc-6epoch-8step-50batch-68acc/tf_model.h5) model and save it to their directories: models/saved_models/<model-type>/batch_size-50__epoch-6__datasize-10perc
+Please download the [BERT Base Cased](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/4-18-7-10perc-bert-cased-6epoch-8step-50batch-73acc/tf_model.h5) model and its [config file](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/4-18-7-10perc-bert-cased-6epoch-8step-50batch-73acc/config.json), [BERT Base Uncased](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/04-22-07-Bert-Base-UnCased-10perc-6epoch-8step-50batch-72acc/tf_model.h5) model and its [config file](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/04-22-07-Bert-Base-UnCased-10perc-6epoch-8step-50batch-72acc/config.json), or [RoBERTa](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/5-18-37-Roberta-10perc-6epoch-8step-50batch-68acc/tf_model.h5) model and its [config file](https://insight-ai-factcc.s3-us-west-2.amazonaws.com/factcc/models/saved_models/5-18-37-Roberta-10perc-6epoch-8step-50batch-68acc/config.json) and save them to their directories: models/saved_models/< model-type >/batch_size-50__epoch-6__datasize-10perc
 
-<model-type>: bert-base-cased, bert-base-uncased, roberta-base
+< model-type >: bert-base-cased, bert-base-uncased, roberta-base
+< Config Path >: src/factcc/try_factcc.cfg
 
-Run the test script: 
+Run the test python file: 
 
 ```python
-sh src/factcc/scripts/try_factcc.sh
+python src/factcc/try_factcc.py  --model-type < model-type > --config-path < Config Path >
+
 ```
