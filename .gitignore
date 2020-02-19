@@ -82,7 +82,10 @@ target/
 src/models/transformers/
 
 # exclude saved models
-models/saved_models/
+models/saved_models/bert-base-cased/batch_size-50__epoch-6__datasize-10perc/
+models/saved_models/bert-base-uncased/batch_size-50__epoch-6__datasize-10perc/
+models/saved_models/roberta-base/batch_size-50__epoch-6__datasize-10perc/
+
 
 # exclude bertviz
 src/bertviz
