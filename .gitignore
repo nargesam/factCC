@@ -82,10 +82,9 @@ target/
 src/models/transformers/
 
 # exclude saved models
-batch_size-50__epoch-6__datasize-10perc/
-batch_size-50__epoch-6__datasize-10perc/
-batch_size-50__epoch-6__datasize-10perc/
-
+# batch_size-50__epoch-6__datasize-10perc/
+# batch_size-50__epoch-6__datasize-10perc/
+# batch_size-50__epoch-6__datasize-10per
 
 # exclude bertviz
 src/bertviz
@@ -99,6 +98,8 @@ rsync-aws.sh
 # vim
 *.swp
 *.swo
+*.h5
+config.json
 
 
 # Mypy cache
