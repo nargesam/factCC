@@ -23,7 +23,7 @@ Demo: Served via an interactive command line interface created with the Python p
 ## Data description
 The source text is CNN and Daily Mail news. The claim is an abstractive summarization of those news. After the summarization has been created and were labeled "SUPPORTS", they have all been augmented to create false claims and were labeled "REFUTES". Here's a description of data: 
 
-<img src="https://github.com/nargesam/factCC/blob/master/images/data.png" width="200" height="200">
+<img src="https://github.com/nargesam/factCC/blob/master/images/data.png" width="300" height="300">
 
 
 The data is provided from Salesforce research, and you can re-create the dataset here: https://github.com/salesforce/factCC/tree/master/data_generation
@@ -34,19 +34,19 @@ The data is provided from Salesforce research, and you can re-create the dataset
 
 To try AutoFact, after you cloned the repo: 
 
-```python
+```
 git clone https://github.com/nargesam/factCC.git
 ```
 
 You can recreate the conda environment:
 
-```python
+```
 conda env create -f factcc_environment.yml 
 ```
 
 Or, install the requirement.txt file:
 
-```python
+```
 pip3 install -r requirements.txt
 ```
 
@@ -57,7 +57,7 @@ Please download the [BERT Base Cased](https://insight-ai-factcc.s3-us-west-2.ama
 
 Run the test python file: 
 
-```python
+```
 python src/factcc/try_factcc.py  --model-type < model-type > --config-path < Config Path >
 
 ```
